@@ -14,3 +14,8 @@ Testing
 =======
 
 `composer test`
+
+Example Add-ons
+===============
+
+Official [WP2Static Add-ons](https://wp2static.com/addons).
