@@ -204,7 +204,7 @@ class Controller {
             'wp2static-addon-boilerplate', // this plugin's slug
             'deploy', // type of add-on we're registering
             'Boilerplate Deployment', // Add-on name
-            'https://wp2static.com/addons/boilerplate/', // docs URL
+            'https://github.com/WP2Static/wp2static-addon-boilerplate', // docs URL
             'Deploys to Boilerplate with cache invalidation' // description
         );
     }

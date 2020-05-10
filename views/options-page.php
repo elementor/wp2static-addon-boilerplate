@@ -13,16 +13,16 @@
         <tr>
             <td style="width:50%;">
                 <label
-                    for="<?php echo $view['options']['boilerplateAccountAPIKey']->name; ?>"
-                ><?php echo $view['options']['boilerplateAccountAPIKey']->label; ?></label>
+                    for="<?php echo $view['options']['anEncryptedOption']->name; ?>"
+                ><?php echo $view['options']['anEncryptedOption']->label; ?></label>
             </td>
             <td>
                 <input
-                    id="<?php echo $view['options']['boilerplateAccountAPIKey']->name; ?>"
-                    name="<?php echo $view['options']['boilerplateAccountAPIKey']->name; ?>"
+                    id="<?php echo $view['options']['anEncryptedOption']->name; ?>"
+                    name="<?php echo $view['options']['anEncryptedOption']->name; ?>"
                     type="password"
-                    value="<?php echo $view['options']['boilerplateAccountAPIKey']->value !== '' ?
-                        \WP2Static\CoreOptions::encrypt_decrypt('decrypt', $view['options']['boilerplateAccountAPIKey']->value) :
+                    value="<?php echo $view['options']['anEncryptedOption']->value !== '' ?
+                        \WP2Static\CoreOptions::encrypt_decrypt('decrypt', $view['options']['anEncryptedOption']->value) :
                         ''; ?>"
                 />
             </td>
@@ -31,15 +31,15 @@
         <tr>
             <td style="width:50%;">
                 <label
-                    for="<?php echo $view['options']['boilerplateStorageZoneName']->name; ?>"
-                ><?php echo $view['options']['boilerplateStorageZoneName']->label; ?></label>
+                    for="<?php echo $view['options']['aRegularOption']->name; ?>"
+                ><?php echo $view['options']['aRegularOption']->label; ?></label>
             </td>
             <td>
                 <input
-                    id="<?php echo $view['options']['boilerplateStorageZoneName']->name; ?>"
-                    name="<?php echo $view['options']['boilerplateStorageZoneName']->name; ?>"
+                    id="<?php echo $view['options']['aRegularOption']->name; ?>"
+                    name="<?php echo $view['options']['aRegularOption']->name; ?>"
                     type="text"
-                    value="<?php echo $view['options']['boilerplateStorageZoneName']->value !== '' ? $view['options']['boilerplateStorageZoneName']->value : ''; ?>"
+                    value="<?php echo $view['options']['aRegularOption']->value !== '' ? $view['options']['aRegularOption']->value : ''; ?>"
                 />
             </td>
         </tr>
