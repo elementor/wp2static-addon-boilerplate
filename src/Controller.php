@@ -1,7 +1,15 @@
 <?php
 
+// This Add-on's unique namespace
 namespace WP2StaticBoilerplate;
 
+/**
+ * Controller class
+ *
+ * For simple Add-ons, sticking everything in here can save complexity
+ * but for better organization, try to put any API clients, specialized
+ * functions into their own classes under the same namespace and keep this thin
+ */
 class Controller {
     /**
      * This Add-on's initialization routine

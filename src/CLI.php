@@ -9,7 +9,7 @@ use WP_CLI;
  *
  * Registers WP-CLI commands for WP2StaticBoilerplate under main wp2static cmd
  *
- * Usage: wp wp2static options set boilerplatePullZoneID mypullzoneid
+ * Usage: wp wp2static boilerplate options set aRegularOption 'Some value'
  */
 class CLI {
 
@@ -27,7 +27,7 @@ class CLI {
         $arg = isset( $args[1] ) ? $args[1] : null;
 
         if ( empty( $action ) ) {
-            WP_CLI::error( 'Missing required argument: <options|storage_zone_files>' );
+            WP_CLI::error( 'Missing required argument: <options>' );
         }
 
         if ( $action === 'options' ) {
@@ -44,7 +44,7 @@ class CLI {
                 }
 
                 // decrypt encrypted values
-                if ( $option_name === 'boilerplateAccountAPIKey' ) {
+                if ( $option_name === 'anEncryptedOption' ) {
                     $option_value = \WP2Static\CoreOptions::encrypt_decrypt(
                         'decrypt',
                         Controller::getValue( $option_name )
@@ -68,8 +68,8 @@ class CLI {
                     $option_value = '';
                 }
 
-                // decrypt apiToken
-                if ( $option_name === 'boilerplateAccountAPIKey' ) {
+                // decrypt an encrypted option
+                if ( $option_name === 'anEncryptedOption' ) {
                     $option_value = \WP2Static\CoreOptions::encrypt_decrypt(
                         'encrypt',
                         $option_value
@@ -83,9 +83,9 @@ class CLI {
                 $options = Controller::getOptions();
 
                 // decrypt encrypted values
-                $options['boilerplateAccountAPIKey']->value = \WP2Static\CoreOptions::encrypt_decrypt(
+                $options['anEncryptedOption']->value = \WP2Static\CoreOptions::encrypt_decrypt(
                     'decrypt',
-                    $options['boilerplateAccountAPIKey']->value
+                    $options['anEncryptedOption']->value
                 );
 
                 WP_CLI\Utils\format_items(
@@ -95,62 +95,12 @@ class CLI {
                 );
             }
         }
-
-        if ( $action === 'storage_zone_files' ) {
-            if ( empty( $arg ) ) {
-                WP_CLI::error( 'Missing required argument: <list|count|delete>' );
-            }
-
-            if ( $arg === 'list' ) {
-                $client = new Boilerplate();
-
-                $filenames = $client->list_storage_zone_files();
-
-                foreach ( $filenames as $name ) {
-                    WP_CLI::line( $name );
-                }
-            }
-
-            if ( $arg === 'count' ) {
-
-                // TODO: call info on storage zone and get the FilesStored key holding total vs iterating
-
-                $client = new Boilerplate();
-
-                $filenames = $client->list_storage_zone_files();
-
-                WP_CLI::line( (string) count( $filenames ) );
-            }
-
-            if ( $arg === 'delete' ) {
-                if ( ! isset( $assoc_args['force'] ) ) {
-                    $this->multilinePrint(
-                        "no --force given. Please type 'yes' to confirm
-                        deletion of all keys in namespace"
-                    );
-
-                    $userval = trim( (string) fgets( STDIN ) );
-
-                    if ( $userval !== 'yes' ) {
-                        WP_CLI::error( 'Failed to delete namespace keys' );
-                    }
-                }
-
-                $client = new Boilerplate();
-
-                $success = $client->delete_storage_zone_files();
-
-                if ( ! $success ) {
-                    WP_CLI::error( 'Failed to delete files in Storage Zone (maybe there weren\'t any?' );
-                }
-
-                WP_CLI::success( 'Deleted all files in Storage Zone' );
-            }
-        }
     }
 
     /**
      * Print multilines of input text via WP-CLI
+     *
+     * Helper to display multiline prompts on the CLI
      */
     public function multilinePrint( string $string ) : void {
         $msg = trim( str_replace( [ "\r", "\n" ], '', $string ) );

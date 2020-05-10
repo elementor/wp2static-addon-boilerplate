@@ -1,10 +1,11 @@
 <?php
 
+// This Add-on's unique namespace
 namespace WP2StaticBoilerplate;
 
+// Iterating for Add-ons processing or deploying files
 use RecursiveIteratorIterator;
 use RecursiveDirectoryIterator;
-use GuzzleHttp\Client;
 
 class Boilerplate {
 
@@ -32,7 +33,6 @@ class Boilerplate {
      * For deployment options without their own/good PHP library
      * a requests library, like Guzzle may be used (refer Netlify
      * or BunnyCDN deployment Add-ons for examples).
-     *
      */
     public function upload_files( string $processed_site_path ) : void {
         $notice = 'Boilerplate Add-on is simulating uploading files';
