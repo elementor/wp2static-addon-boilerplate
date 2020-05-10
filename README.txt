@@ -7,11 +7,11 @@ Stable tag: 1.0-alpha-001
 License: Unlicense
 License URI: http://unlicense.org
 
-Adds Boilerplate as a deployment option for WP2Static.
+Boilerplate Add-on plugin example for WP2Static
 
 == Description ==
 
-Take advantage of Boilerplate's cheap and fast global network to host your WordPress powered static website.
+Serves as an example reference for developers to create their own WP2Static Add-on or utilize some of the actions/filters.
 
 == Installation ==
 
@@ -24,4 +24,4 @@ Activate the plugin, then navigate to your WP2Static > Boilerplate to see
 
 = 1.0 =
 
-First release as separate plugin add-on for WP2Static V7
+First release
