@@ -8,7 +8,13 @@ Serves as an example reference for developers to create their own WP2Static Add-
 Development
 ===========
 
+
 `composer install`
+
+Building
+========
+
+`composer build INSTALLER_NAME COMPRESS_PHP_FILES`
 
 Testing
 =======

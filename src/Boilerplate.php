@@ -8,144 +8,36 @@ use GuzzleHttp\Client;
 
 class Boilerplate {
 
-    private $accountAPIKey;
-    private $storageZoneName;
-    private $storageZoneAccessKey;
-    private $pullZoneID;
+    private $an_encrypted_option;
+    private $a_regular_option;
 
     public function __construct() {
-        $this->storageZoneAccessKey = '';
-        $this->pullZoneID = 0;
-        $this->accountAPIKey = \WP2Static\CoreOptions::encrypt_decrypt(
+        $this->an_encrypted_option = \WP2Static\CoreOptions::encrypt_decrypt(
             'decrypt',
-            Controller::getValue( 'boilerplateAccountAPIKey' )
+            Controller::getValue( 'an_encrypted_option' )
         );
-        $this->storageZoneName = Controller::getValue( 'boilerplateStorageZoneName' );
+        $this->a_regular_option = Controller::getValue( 'boilerplateStorageZoneName' );
 
-        if ( ! $this->accountAPIKey || ! $this->storageZoneName ) {
-            $err = 'Unable to connect to Boilerplate API without ' .
-            'Account API Key, Storage Zone Name, Storage Zone Access Key & Pull Zone ID';
-            \WP2Static\WsLog::l( $err );
-        }
+        $notice = 'Boilerplate class has been instantiated with' .
+            "a regular option: $this->a_regular_option " .
+            "and an encrypted option: $this->an_encrypted_option ";
 
-        $this->accountClient = new Client( [ 'base_uri' => 'https://boilerplate.com' ] );
-
-        $this->accountHeaders = [ 'AccessKey' => $this->accountAPIKey ];
-
-        // get list of Storage Zones to find ID
-        // get Storage Zone Access Key using Account API Key
-        $res = $this->accountClient->request(
-            'GET',
-            'api/storagezone',
-            [
-                'headers' => $this->accountHeaders,
-            ],
-        );
-
-        $result = json_decode( (string) $res->getBody() );
-
-        if ( $result ) {
-            foreach ( $result as $storageZone ) {
-                if ( $storageZone->Name === $this->storageZoneName ) {
-                    // validate if pull zone is connected
-                    if ( ! $storageZone->PullZones ) {
-                        $err = 'No Pull Zone found attached to this Storage Zone, please check.';
-                        \WP2Static\WsLog::l( $err );
-                        error_log( $err );
-                    }
-
-                    if ( count( $storageZone->PullZones ) > 1 ) {
-                        $notice = 'Multiple Pull Zones attached to Storage Zone, using first.';
-                        \WP2Static\WsLog::l( $notice );
-                        error_log( $notice );
-                    }
-
-                    // use first connected PullZone ID
-                    $this->pullZoneID = $storageZone->PullZones[0]->Id;
-                    $notice = "Using Pull Zone ID $this->pullZoneID.";
-                    \WP2Static\WsLog::l( $notice );
-                    error_log( $notice );
-
-                    $this->storageZoneAccessKey = $storageZone->Password;
-                }
-            }
-        }
-
-        if ( ! $this->storageZoneAccessKey ) {
-            $err = 'Unable to find Storage Zone by name, please check your input.';
-            \WP2Static\WsLog::l( $err );
-            error_log( $err );
-        }
-
-        $this->storageZoneclient = new Client( [ 'base_uri' => 'https://storage.boilerplate.com' ] );
-
-        $this->storageZoneheaders = [
-            'AccessKey' => $this->storageZoneAccessKey,
-            'Accept' => 'application/json',
-        ];
+        \WP2Static\WsLog( $notice );
     }
 
     /**
-     * Delete all files and directories in Storage Zone
+     * Upload processed StaticSite files
      *
-     * Will delete directories without needing to drill down into them
+     * This could be via a 3rd party API, local copy, ZIP, etc.
+     * For deployment options without their own/good PHP library
+     * a requests library, like Guzzle may be used (refer Netlify
+     * or BunnyCDN deployment Add-ons for examples).
+     *
      */
-    public function delete_storage_zone_files() : bool {
-        $storage_zone_files = $this->list_storage_zone_files();
-
-        foreach ( $storage_zone_files as $file ) {
-            $res = $this->storageZoneclient->request(
-                'DELETE',
-                "$this->storageZoneName/$file",
-                [
-                    'headers' => $this->storageZoneheaders,
-                ],
-            );
-
-            $result = json_decode( (string) $res->getBody() );
-
-            if ( ! $result ) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /**
-     * List all files within Storage Zone
-     *
-     * TODO: write Iterator to get nested files
-     *
-     * @return string[] list of files
-     */
-    public function list_storage_zone_files() : array {
-        $storage_zone_files = [];
-
-        $res = $this->storageZoneclient->request(
-            'GET',
-            "$this->storageZoneName/",
-            [
-                'headers' => $this->storageZoneheaders,
-            ],
-        );
-
-        $result = json_decode( (string) $res->getBody() );
-
-        if ( $result ) {
-            foreach ( $result as $path ) {
-                if ( $path->IsDirectory ) {
-                    $storage_zone_files[] = $path->ObjectName . '/';
-                } else {
-                    $storage_zone_files[] = $path->ObjectName;
-                }
-            }
-        }
-
-        return $storage_zone_files;
-    }
-
     public function upload_files( string $processed_site_path ) : void {
+        $notice = 'Boilerplate Add-on is simulating uploading files';
+        \WP2Static\WsLog( $notice );
+
         if ( ! is_dir( $processed_site_path ) ) {
             return;
         }
@@ -163,7 +55,6 @@ class Boilerplate {
             if ( $base_name != '.' && $base_name != '..' ) {
                 $real_filepath = realpath( $filename );
 
-                // TODO: do filepaths differ when running from WP-CLI (non-chroot)?
                 $cache_key = str_replace( $processed_site_path, '', $filename );
 
                 if ( \WP2Static\DeployCache::fileisCached( $cache_key ) ) {
@@ -186,82 +77,14 @@ class Boilerplate {
 
                 $remote_path = ltrim( $cache_key, '/' );
 
-                $res = $this->storageZoneclient->request(
-                    'PUT',
-                    "$this->storageZoneName/$remote_path",
-                    [
-                        'headers' => $this->storageZoneheaders,
-                        'body' => file_get_contents( $filename ),
-                    ],
-                );
-
-                $result = json_decode( (string) $res->getBody() );
+                // Note: Do your per-file or batch transfers here
+                $result = true;
 
                 if ( $result ) {
-                    error_log( print_r( $result, true ) );
-
-                    // TODO: Look for 201 status from Bunny
-                    // if ( $result['@metadata']['statusCode'] === 200 ) {
-                    // \WP2Static\DeployCache::addFile( $cache_key );
-                    // }
-
-                    // TODO: purge cache on each of these or on hook?
+                    // Note: Add file path to DeployCache on successful transfer
+                    \WP2Static\DeployCache::addFile( $cache_key );
                 }
             }
         }
-    }
-
-    public function boilerplate_purge_cache() {
-        error_log( 'calling cache purge' );
-
-        // try {
-        // $endpoint = 'https://boilerplate.com/api/pullzone/' .
-        // $this->pull_zone_id . '/purgeCache';
-
-        // $ch = curl_init();
-
-        // curl_setopt( $ch, CURLOPT_CUSTOMREQUEST, 'POST' );
-        // curl_setopt( $ch, CURLOPT_URL, $endpoint );
-        // curl_setopt( $ch, CURLOPT_RETURNTRANSFER, 1 );
-        // curl_setopt( $ch, CURLOPT_SSL_VERIFYHOST, 0 );
-        // curl_setopt( $ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1 );
-        // curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, 0 );
-        // curl_setopt( $ch, CURLOPT_FOLLOWLOCATION, 0 );
-        // curl_setopt( $ch, CURLOPT_POST, 1 );
-
-        // curl_setopt(
-        // $ch,
-        // CURLOPT_HTTPHEADER,
-        // array(
-        // 'Content-Type: application/json',
-        // 'Content-Length: 0',
-        // 'AccessKey: ' .
-        // $this->pull_zone_access_key,
-        // )
-        // );
-
-        // $output = curl_exec( $ch );
-        // $status_code = curl_getinfo( $ch, CURLINFO_HTTP_CODE );
-
-        // curl_close( $ch );
-
-        // $good_response_codes = array( '100', '200', '201', '302' );
-
-        // if ( ! in_array( $status_code, $good_response_codes ) ) {
-        // $err =
-        // 'BAD RESPONSE DURING BUNNYCDN PURGE CACHE: ' . $status_code;
-        // WsLog::l( $err );
-        // throw new Exception( $err );
-
-        // echo 'FAIL';
-        // }
-
-        // if ( ! defined( 'WP_CLI' ) ) {
-        // echo 'SUCCESS';
-        // }
-        // } catch ( Exception $e ) {
-        // WsLog::l( 'BUNNYCDN EXPORT: error encountered' );
-        // WsLog::l( $e );
-        // }
     }
 }

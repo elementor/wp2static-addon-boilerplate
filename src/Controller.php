@@ -3,21 +3,13 @@
 namespace WP2StaticBoilerplate;
 
 class Controller {
+    /**
+     * This Add-on's initialization routine
+     *
+     * Runs on frequently, so avoid resource intensive routines in here.
+     */
     public function run() : void {
-        add_action(
-            'admin_post_wp2static_boilerplate_save_options',
-            [ $this, 'saveOptionsFromUI' ],
-            15,
-            1
-        );
-
-        add_action(
-            'wp2static_deploy',
-            [ $this, 'deploy' ],
-            15,
-            1
-        );
-
+        // registers this Add-on's options page
         add_action(
             'admin_menu',
             [ $this, 'addOptionsPage' ],
@@ -25,8 +17,26 @@ class Controller {
             1
         );
 
+        // ensures WP2Static > Options is active menu when in Add-on's options view
         add_filter( 'parent_file', [ $this, 'setActiveParentMenu' ] );
 
+        // calls our options save handler when POSTing from Add-on's options view
+        add_action(
+            'admin_post_wp2static_boilerplate_save_options',
+            [ $this, 'saveOptionsFromUI' ],
+            15,
+            1
+        );
+
+        // registers a handler to trigger for WP2Static `deploy` phase of workflow
+        add_action(
+            'wp2static_deploy',
+            [ $this, 'deploy' ],
+            15,
+            1
+        );
+
+        // function to run after deployment (ie, cache invalidation, Slack notification)
         add_action(
             'wp2static_post_deploy_trigger',
             [ 'WP2StaticBoilerplate\Boilerplate', 'boilerplate_purge_cache' ],
@@ -43,7 +53,9 @@ class Controller {
     }
 
     /**
-     *  Get all add-on options
+     *  Get all Add-on's options
+     *
+     *  Used on the Add-ons options page or via WP-CLI
      *
      *  @return mixed[] All options
      */
@@ -63,7 +75,9 @@ class Controller {
     }
 
     /**
-     * Seed options
+     * Seed Add-on options
+     *
+     * Ensures Add-on has required options initialized before usage.
      */
     public static function seedOptions() : void {
         global $wpdb;
@@ -75,9 +89,9 @@ class Controller {
 
         $query = $wpdb->prepare(
             $query_string,
-            'boilerplateAccountAPIKey',
+            'aRegularOption',
             '',
-            'Account API Key',
+            'A regular option',
             ''
         );
 
@@ -85,9 +99,9 @@ class Controller {
 
         $query = $wpdb->prepare(
             $query_string,
-            'boilerplateStorageZoneName',
+            'anEncryptedOption',
             '',
-            'Storage Zone Name',
+            'An encrypted option',
             ''
         );
 
@@ -95,7 +109,9 @@ class Controller {
     }
 
     /**
-     * Save options
+     * Save option
+     *
+     * Saves an option. Called when POSTing via UI or saving with WP-CLI
      *
      * @param mixed $value option value to save
      */
@@ -111,22 +127,28 @@ class Controller {
         );
     }
 
+    /**
+     * Render the Add-ons options page
+     *
+     * Add-ons don't get their own submenu within WP2Static, but if they have
+     * configurable options, it's expected to register an options page with WP2Static Core
+     * which will link to them from the Add-ons page
+     */
     public static function renderBoilerplatePage() : void {
+        // template variables for the Add-on's options page
         $view = [];
+        // nonce used to validate any POSTing from the Add-ons options page
         $view['nonce_action'] = 'wp2static-boilerplate-options';
-        $view['uploads_path'] = \WP2Static\SiteInfo::getPath( 'uploads' );
-        $boilerplate_path = \WP2Static\SiteInfo::getPath( 'uploads' ) . 'wp2static-processed-site.boilerplate';
-
+        // get all of this Add-ons options from database
         $view['options'] = self::getOptions();
-
-        $view['boilerplate_url'] =
-            is_file( $boilerplate_path ) ?
-                \WP2Static\SiteInfo::getUrl( 'uploads' ) . 'wp2static-processed-site.boilerplate' : '#';
-
-        require_once __DIR__ . '/../views/boilerplate-page.php';
+        // load options page template from disk
+        require_once __DIR__ . '/../views/options-page.php';
     }
 
-
+    /**
+     * Handler for the `wp2static_deploy` action if this Add-on
+     * is to perform anything on the `deploy` phase of WP2Static workflow
+     */
     public function deploy( string $processed_site_path ) : void {
         \WP2Static\WsLog::l( 'Boilerplate Addon deploying' );
 
@@ -151,21 +173,27 @@ class Controller {
         ) $charset_collate;";
 
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+
+        // keep Add-ons options schema up to date
         dbDelta( $sql );
 
         $options = self::getOptions();
 
-        if ( ! isset( $options['boilerplateBucket'] ) ) {
+        /**
+         * Check that Add-ons required options have been initialized
+         * or seed default options
+        */
+        if ( ! isset( $options['aRegularOption'] ) ) {
             self::seedOptions();
         }
 
         do_action(
-            'wp2static_register_addon',
-            'wp2static-addon-boilerplate',
-            'deploy',
-            'Boilerplate Deployment',
-            'https://wp2static.com/addons/boilerplate/',
-            'Deploys to Boilerplate with cache invalidation'
+            'wp2static_register_addon', // hook fired from WP2Static
+            'wp2static-addon-boilerplate', // this plugin's slug
+            'deploy', // type of add-on we're registering
+            'Boilerplate Deployment', // Add-on name
+            'https://wp2static.com/addons/boilerplate/', // docs URL
+            'Deploys to Boilerplate with cache invalidation' // description
         );
     }
 
@@ -222,18 +250,6 @@ class Controller {
         }
     }
 
-    /**
-     * Add WP2Static submenu
-     *
-     * @param mixed[] $submenu_pages array of submenu pages
-     * @return mixed[] array of submenu pages
-     */
-    public static function addSubmenuPage( array $submenu_pages ) : array {
-        $submenu_pages['boilerplate'] = [ 'WP2StaticBoilerplate\Controller', 'renderBoilerplatePage' ];
-
-        return $submenu_pages;
-    }
-
     public static function saveOptionsFromUI() : void {
         check_admin_referer( 'wp2static-boilerplate-options' );
 
@@ -241,23 +257,23 @@ class Controller {
 
         $table_name = $wpdb->prefix . 'wp2static_addon_boilerplate_options';
 
-        $accountAPIKey =
+        $an_encrypted_option =
             $_POST['boilerplateAccountAPIKey'] ?
             \WP2Static\CoreOptions::encrypt_decrypt(
                 'encrypt',
-                sanitize_text_field( $_POST['boilerplateAccountAPIKey'] )
+                sanitize_text_field( $_POST['anEncryptedOption'] )
             ) : '';
 
         $wpdb->update(
             $table_name,
-            [ 'value' => $accountAPIKey ],
-            [ 'name' => 'boilerplateAccountAPIKey' ]
+            [ 'value' => $an_encrypted_option ],
+            [ 'name' => 'anEncryptedOption' ]
         );
 
         $wpdb->update(
             $table_name,
-            [ 'value' => sanitize_text_field( $_POST['boilerplateStorageZoneName'] ) ],
-            [ 'name' => 'boilerplateStorageZoneName' ]
+            [ 'value' => sanitize_text_field( $_POST['aRegularOption'] ) ],
+            [ 'name' => 'aRegularOption' ]
         );
 
         wp_safe_redirect( admin_url( 'admin.php?page=wp2static-boilerplate' ) );
@@ -299,11 +315,15 @@ class Controller {
         );
     }
 
-    // ensure WP2Static menu is active for addon
+    /**
+     * Set WP2Static > Options menu to active when viewing this
+     * add-on's options page.
+     */
     public function setActiveParentMenu() {
             global $plugin_page;
 
         if ( 'wp2static-addon-boilerplate' === $plugin_page ) {
+            // phpcs:ignore
             $plugin_page = 'wp2static';
         }
     }
