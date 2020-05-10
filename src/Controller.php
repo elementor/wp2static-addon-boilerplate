@@ -203,9 +203,9 @@ class Controller {
             'wp2static_register_addon', // hook fired from WP2Static
             'wp2static-addon-boilerplate', // this plugin's slug
             'deploy', // type of add-on we're registering
-            'Boilerplate Deployment', // Add-on name
+            'Boilerplate Demonstration', // Add-on name
             'https://github.com/WP2Static/wp2static-addon-boilerplate', // docs URL
-            'Deploys to Boilerplate with cache invalidation' // description
+            'Plugin to serve as developer reference' // description
         );
     }
 
@@ -270,7 +270,7 @@ class Controller {
         $table_name = $wpdb->prefix . 'wp2static_addon_boilerplate_options';
 
         $an_encrypted_option =
-            $_POST['boilerplateAccountAPIKey'] ?
+            $_POST['anEncryptedOption'] ?
             \WP2Static\CoreOptions::encrypt_decrypt(
                 'encrypt',
                 sanitize_text_field( $_POST['anEncryptedOption'] )
@@ -288,7 +288,7 @@ class Controller {
             [ 'name' => 'aRegularOption' ]
         );
 
-        wp_safe_redirect( admin_url( 'admin.php?page=wp2static-boilerplate' ) );
+        wp_safe_redirect( admin_url( 'admin.php?page=wp2static-addon-boilerplate' ) );
         exit;
     }
 
