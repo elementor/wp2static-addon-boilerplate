@@ -47,7 +47,7 @@ class Controller {
         // function to run after deployment (ie, cache invalidation, Slack notification)
         add_action(
             'wp2static_post_deploy_trigger',
-            [ 'WP2StaticBoilerplate\Boilerplate', 'boilerplate_purge_cache' ],
+            [ 'WP2StaticBoilerplate\Boilerplate', 'post_deployment_action' ],
             15,
             1
         );
@@ -147,6 +147,10 @@ class Controller {
         $view = [];
         // nonce used to validate any POSTing from the Add-ons options page
         $view['nonce_action'] = 'wp2static-boilerplate-options';
+
+        // get some SiteInfo from WP2Static core plugin
+        $view['uploads_path'] = \WP2Static\SiteInfo::getPath( 'uploads' );
+        $view['uploads_url'] = \WP2Static\SiteInfo::getUrl( 'uploads' );
         // get all of this Add-ons options from database
         $view['options'] = self::getOptions();
         // load options page template from disk
@@ -312,14 +316,19 @@ class Controller {
         return $option_value;
     }
 
-    public function addOptionsPage() {
+    /**
+     * Register Add-on options page
+     *
+     * Will be linked to from WP2Static > Add-ons page
+     */
+    public function addOptionsPage() : void {
         add_submenu_page(
-            null,
-            'Boilerplate Deployment Options',
-            'Boilerplate Deployment Options',
-            'manage_options',
-            'wp2static-addon-boilerplate',
-            [ $this, 'renderBoilerplatePage' ]
+            'null', // don't add within WP2Static menu directly
+            'Boilerplate Deployment Options', // page name / title
+            'Boilerplate Deployment Options', // page name / title
+            'manage_options', // user level required to access page
+            'wp2static-addon-boilerplate', // page slug
+            [ $this, 'renderBoilerplatePage' ] // function to render page
         );
     }
 
@@ -327,7 +336,7 @@ class Controller {
      * Set WP2Static > Options menu to active when viewing this
      * add-on's options page.
      */
-    public function setActiveParentMenu() {
+    public function setActiveParentMenu() : void {
             global $plugin_page;
 
         if ( 'wp2static-addon-boilerplate' === $plugin_page ) {

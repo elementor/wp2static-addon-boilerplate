@@ -7,9 +7,24 @@ namespace WP2StaticBoilerplate;
 use RecursiveIteratorIterator;
 use RecursiveDirectoryIterator;
 
+/**
+ * Boilerplate
+ *
+ * Heavy lifting of Add-on preferred in here than Controller
+ */
 class Boilerplate {
 
+    /**
+     * Encrypted option example
+     *
+     * @var string $an_encrypted_option
+     */
     private $an_encrypted_option;
+    /**
+     * Encrypted option example
+     *
+     * @var string $a_regular_option
+     */
     private $a_regular_option;
 
     public function __construct() {
@@ -23,7 +38,8 @@ class Boilerplate {
             "a regular option: $this->a_regular_option " .
             "and an encrypted option: $this->an_encrypted_option ";
 
-        \WP2Static\WsLog( $notice );
+        // log to WP2Static > Logs
+        \WP2Static\WsLog::l( $notice );
     }
 
     /**
@@ -36,7 +52,8 @@ class Boilerplate {
      */
     public function upload_files( string $processed_site_path ) : void {
         $notice = 'Boilerplate Add-on is simulating uploading files';
-        \WP2Static\WsLog( $notice );
+        // log to WP2Static > Logs
+        \WP2Static\WsLog::l( $notice );
 
         if ( ! is_dir( $processed_site_path ) ) {
             return;
@@ -63,7 +80,9 @@ class Boilerplate {
 
                 if ( ! $real_filepath ) {
                     $err = 'Trying to deploy unknown file to Boilerplate: ' . $filename;
+                    // log to WP2Static > Logs
                     \WP2Static\WsLog::l( $err );
+                    // skip this file in iteration
                     continue;
                 }
 
@@ -77,14 +96,29 @@ class Boilerplate {
 
                 $remote_path = ltrim( $cache_key, '/' );
 
-                // Note: Do your per-file or batch transfers here
-                $result = true;
+                // Note: Do your per-file (or batch) transfers here
+                // stimulate successful and failed file transfers
+                $result = rand( 0, 1 ) == 1;
 
                 if ( $result ) {
-                    // Note: Add file path to DeployCache on successful transfer
+                    // Add file path to DeployCache on successful transfer
                     \WP2Static\DeployCache::addFile( $cache_key );
+                } else {
+                    $err = "Failed to deploy file $cache_key";
+                    // log to WP2Static > Logs
+                    \WP2Static\WsLog::l( $err );
                 }
             }
         }
+    }
+
+    /**
+     * Post-procesing action
+     *
+     * Suited for cache invalidation, Slack notification, etc.
+     */
+    public function post_deployment_action( string $processed_site_path ) : void {
+        $notice = 'Boilerplate Add-on is simulating post deployment action';
+        \WP2Static\WsLog::l( $notice );
     }
 }
