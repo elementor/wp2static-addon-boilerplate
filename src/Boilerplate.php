@@ -118,7 +118,7 @@ class Boilerplate {
      * Suited for cache invalidation, Slack notification, etc.
      */
     public static function post_deployment_action( string $enabled_deployer ) : void {
-        if ( ! $enabled_deployer === 'wp2static-addon-boilerplate' ) {
+        if ( $enabled_deployer !== 'wp2static-addon-boilerplate' ) {
             return;
         }
         $notice = 'Boilerplate Add-on is simulating post deployment action';
