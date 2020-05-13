@@ -345,7 +345,7 @@ class Controller {
 
         if ( 'wp2static-addon-boilerplate' === $plugin_page ) {
             // phpcs:ignore
-            $plugin_page = 'wp2static';
+            $plugin_page = 'wp2static-options';
         }
     }
 }
