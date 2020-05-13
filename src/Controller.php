@@ -41,7 +41,7 @@ class Controller {
             'wp2static_deploy',
             [ $this, 'deploy' ],
             15,
-            1
+            2
         );
 
         // function to run after deployment (ie, cache invalidation, Slack notification)
@@ -49,7 +49,7 @@ class Controller {
             'wp2static_post_deploy_trigger',
             [ 'WP2StaticBoilerplate\Boilerplate', 'post_deployment_action' ],
             15,
-            1
+            2
         );
 
         if ( defined( 'WP_CLI' ) ) {
@@ -161,7 +161,11 @@ class Controller {
      * Handler for the `wp2static_deploy` action if this Add-on
      * is to perform anything on the `deploy` phase of WP2Static workflow
      */
-    public function deploy( string $processed_site_path ) : void {
+    public function deploy( string $processed_site_path, string $enabled_deployer ) : void {
+        if ( $enabled_deployer !== 'wp2static-addon-boilerplate' ) {
+            return;
+        }
+
         \WP2Static\WsLog::l( 'Boilerplate Addon deploying' );
 
         $boilerplate_deployer = new Boilerplate();
